@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">TuDu</string>
+    <string name="strTuduTitle">Wonderlist TuDu</string>
+    <string name="btnAddItem">Add TuDu</string>
+    <string name="editBelowTudu">Edit below TuDu item:</string>
+    <string name="save">Save</string>
+</resources>
