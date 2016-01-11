@@ -26,6 +26,6 @@ Spent some time making the UI work across multiple phone resolutions by playing 
 
 Walkthrough of all user stories:
 
-![Video Walkthrough](anim_basic_tudu.gif)
+![Video Walkthrough](app/src/main/res/drawable/anim_basic_tudu.gif)
 
 GIF created with [LiceCap](http://www.cockos.com/licecap/).
