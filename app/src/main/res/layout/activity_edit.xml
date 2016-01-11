@@ -29,13 +29,16 @@
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true"
         android:hint="New Description of the TuDu item"
-        android:singleLine="true"/>
+        android:singleLine="true"
+        android:imeOptions="actionDone"
+        android:autoText="true"
+        android:inputType="textCapSentences|textAutoComplete|textAutoCorrect"/>
 
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/save"
-        android:id="@+id/button2"
+        android:id="@+id/btnSave"
         android:layout_below="@+id/editText"
         android:layout_alignRight="@+id/textView2"
         android:layout_alignEnd="@+id/textView2"

@@ -4,13 +4,15 @@ import android.content.Intent;
 import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
-import android.widget.Toast;
+import android.widget.TextView;
 
 import com.google.android.gms.appindexing.Action;
 import com.google.android.gms.appindexing.AppIndex;
@@ -57,7 +59,22 @@ public class MainActivity extends AppCompatActivity {
         tuDusAdapter = new ArrayAdapter<String>(this,
                 android.R.layout.simple_list_item_1, tuDus);
         lvTuDus.setAdapter(tuDusAdapter);
+        EditText etNewTuDu = (EditText) findViewById(R.id.etNewTuDu);
+        etNewTuDu.requestFocus();
+
+        final Button btnAddTudu = (Button) findViewById(R.id.btnAddTuDu);
         setListViewListener();
+        etNewTuDu.setOnEditorActionListener(new EditText.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if (actionId == EditorInfo.IME_ACTION_DONE) {
+                    btnAddTudu.performClick();
+                    return true;
+                }
+                return false;
+            }
+        });
+
         // ATTENTION: This was auto-generated to implement the App Indexing API.
         // See https://g.co/AppIndexing/AndroidStudio for more information.
         client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();

@@ -4,8 +4,12 @@ import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
+import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.logging.Logger;
@@ -24,6 +28,19 @@ public class EditActivity extends AppCompatActivity {
         EditText etEditedTuDu = (EditText) findViewById(R.id.editText);
         etEditedTuDu.setText(tuDuText);
         etEditedTuDu.setSelection(tuDuText.length());
+
+        final Button btnSave = (Button) findViewById(R.id.btnSave);
+        etEditedTuDu.setOnEditorActionListener(new EditText.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if (actionId == EditorInfo.IME_ACTION_DONE) {
+                    btnSave.performClick();
+                    return true;
+                }
+                return false;
+            }
+        });
+
     }
 
     public void onSaveClicked(View v) {
