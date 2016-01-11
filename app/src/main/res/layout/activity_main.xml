@@ -28,7 +28,7 @@
         android:layout_alignParentStart="true"
         android:layout_toLeftOf="@+id/button"
         android:layout_toStartOf="@+id/button"
-        android:hint="Short description of TuDu action item"
+        android:hint="Description of the TuDu item"
         android:singleLine="true"/>
 
     <Button

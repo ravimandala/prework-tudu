@@ -24,7 +24,6 @@ public class EditActivity extends AppCompatActivity {
         EditText etEditedTuDu = (EditText) findViewById(R.id.editText);
         etEditedTuDu.setText(tuDuText);
         etEditedTuDu.setSelection(tuDuText.length());
-        Log.d("Ravi", "Position obtained: " + position);
     }
 
     public void onSaveClicked(View v) {
@@ -35,9 +34,6 @@ public class EditActivity extends AppCompatActivity {
         i.putExtra("editedText", tuDuText);
         i.putExtra("position", position);
         setResult(RESULT_OK, i);
-        Toast.makeText(this, "Position: " + position + "; Edited TuDu: " + tuDuText, Toast.LENGTH_SHORT);
-        Log.d("Ravi", "Position obtained: " + position);
-        Log.d("Ravi", "Edited TuDu: " + tuDuText);
         this.finish();
     }
 }

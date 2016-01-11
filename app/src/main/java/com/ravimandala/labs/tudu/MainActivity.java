@@ -66,10 +66,12 @@ public class MainActivity extends AppCompatActivity {
     public void onAddTuDu(View v) {
         EditText etNewTuDu = (EditText) findViewById(R.id.etNewTuDu);
         String tuDuText = etNewTuDu.getText().toString();
-        tuDusAdapter.add(tuDuText);
-        etNewTuDu.setText("");
-        writeTuDus();
-        setListViewListener();
+
+        if(tuDuText.trim().length() != 0) {
+            tuDusAdapter.add(tuDuText);
+            etNewTuDu.setText("");
+            writeTuDus();
+        }
     }
 
     private void setListViewListener() {
