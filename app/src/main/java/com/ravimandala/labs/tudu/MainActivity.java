@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
@@ -14,22 +15,23 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.activeandroid.ActiveAndroid;
+import com.activeandroid.query.Select;
 import com.google.android.gms.appindexing.Action;
 import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.ravimandala.labs.tudu.db.model.TuDuItem;
 
-import org.apache.commons.io.FileUtils;
-
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
-    ArrayList<String> tuDus;
+    ArrayList<String> tuDuList;
     ArrayAdapter<String> tuDusAdapter;
     ListView lvTuDus;
     private final int EDIT_REQUEST_CODE = 20;
+    private final String TAG = "Ravi";
 
     /**
      * ATTENTION: This was auto-generated to implement the App Indexing API.
@@ -41,9 +43,10 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == EDIT_REQUEST_CODE && resultCode == RESULT_OK) {
             int position = data.getIntExtra("position", -1);
-            if (position >= 0 && position < tuDus.size()) {
-                tuDus.set(position, data.getStringExtra("editedText"));
-                writeTuDus();
+            if (position >= 0 && position < tuDuList.size()) {
+                String editedText = data.getStringExtra("editedText");
+                editTuDu(tuDuList.get(position), editedText);
+                tuDuList.set(position, editedText);
                 tuDusAdapter.notifyDataSetChanged();
             }
         }
@@ -52,12 +55,13 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        ActiveAndroid.initialize(getApplication());
         setContentView(R.layout.activity_main);
         lvTuDus = (ListView) findViewById(R.id.lvTuDus);
-        tuDus = new ArrayList<>();
+        tuDuList = new ArrayList<>();
         readTuDus();
         tuDusAdapter = new ArrayAdapter<String>(this,
-                android.R.layout.simple_list_item_1, tuDus);
+                android.R.layout.simple_list_item_1, tuDuList);
         lvTuDus.setAdapter(tuDusAdapter);
         EditText etNewTuDu = (EditText) findViewById(R.id.etNewTuDu);
         etNewTuDu.requestFocus();
@@ -87,7 +91,7 @@ public class MainActivity extends AppCompatActivity {
         if(tuDuText.trim().length() != 0) {
             tuDusAdapter.add(tuDuText);
             etNewTuDu.setText("");
-            writeTuDus();
+            writeTuDu(tuDuText);
         }
     }
 
@@ -96,8 +100,8 @@ public class MainActivity extends AppCompatActivity {
                 new AdapterView.OnItemLongClickListener() {
                     @Override
                     public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-                        tuDus.remove(position);
-                        writeTuDus();
+                        deleteTuDu(tuDuList.get(position));
+                        tuDuList.remove(position);
                         tuDusAdapter.notifyDataSetChanged();
                         return true;
                     }
@@ -109,7 +113,7 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                         Intent i = new Intent(MainActivity.this, EditActivity.class);
-                        i.putExtra("text2Edit", tuDus.get(position));
+                        i.putExtra("text2Edit", tuDuList.get(position));
                         i.putExtra("position", position);
                         startActivityForResult(i, EDIT_REQUEST_CODE);
                     }
@@ -118,23 +122,32 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void readTuDus() {
-        File filesDir = getFilesDir();
-        File tuDuFile = new File(filesDir, "tudu.txt");
-        try {
-            tuDus = new ArrayList<String>(FileUtils.readLines(tuDuFile));
-        } catch (IOException ioe) {
-            tuDus = new ArrayList<String>();
+        List<TuDuItem> tuDuItems = new Select().from(TuDuItem.class).execute();
+        Log.d(TAG, "Number of TuDus retrieved from DB: " + tuDuItems.size());
+        for (TuDuItem tuDuRow: tuDuItems) {
+            tuDuList.add(tuDuRow.getDescription());
         }
     }
 
-    private void writeTuDus() {
-        File filesDir = getFilesDir();
-        File tuDuFile = new File(filesDir, "tudu.txt");
-        try {
-            FileUtils.writeLines(tuDuFile, tuDus);
-        } catch (IOException ioe) {
-            ioe.printStackTrace();
-        }
+    private void writeTuDu(String tuDu) {
+        TuDuItem tuDuItem = new TuDuItem(tuDu);
+        Log.d(TAG, "Saving TuDu to DB: " + tuDuItem.toString());
+        tuDuItem.save();
+        List<TuDuItem> tuDuItems = new Select().from(TuDuItem.class).execute();
+        Log.d(TAG, "Number of items we have now: " + tuDuItems.size());
+    }
+
+    private void editTuDu(String oldTuDu, String newTuDu) {
+        TuDuItem tuDuItem = new TuDuItem(oldTuDu);
+        tuDuItem.setDescription(newTuDu);
+        Log.d(TAG, "Saving edited TuDu to DB: " + tuDuItem.toString());
+        tuDuItem.save();
+    }
+
+    private void deleteTuDu(String tuDu) {
+        TuDuItem tuDuItem = new TuDuItem(tuDu);
+        Log.d(TAG, "Deleting TuDu from DB: " + tuDuItem.toString());
+        tuDuItem.delete();
     }
 
     @Override
