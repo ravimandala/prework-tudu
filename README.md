@@ -15,7 +15,7 @@ Wonderlist TuDu is an Android demo application for organizing TuDu items in a li
 * [x] Optional: Make descriptions single line
 * [x] Optional: Several improvements to the text input (auto correct, sentence caps, single line, etc.,)
 * [x] Take default action on pressing return ("Add Tudu" in main activity and "Save" in Edit activity)
-* [ ] Optional: Persist the todo items into SQLite instead of a text file
+* [x] Optional: Persist the todo items into SQLite instead of a text file
 * [ ] Optional: Improve style of the todo items in the list using a custom adapter
 * [ ] Optional: Add support for completion due dates for todo items (and display within listview item)
 * [ ] Optional: Use a DialogFragment instead of new Activity for editing items
@@ -26,6 +26,7 @@ Wonderlist TuDu is an Android demo application for organizing TuDu items in a li
 Spent some time making the UI work across multiple phone resolutions.
 
 Walkthrough GIFs:
+
 ![Video Walkthrough of basic user stories: ](app/src/main/res/drawable/anim_basic_tudu.gif)
 
 GIF created with [LiceCap](http://www.cockos.com/licecap/).
