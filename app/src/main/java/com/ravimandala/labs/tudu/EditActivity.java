@@ -16,6 +16,7 @@ import java.util.logging.Logger;
 
 public class EditActivity extends AppCompatActivity {
 
+    private String originalDescription;
     private int position;
 
     @Override
@@ -23,11 +24,11 @@ public class EditActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit);
 
-        String tuDuText = getIntent().getStringExtra("text2Edit");
+        originalDescription = getIntent().getStringExtra("originalDescription");
         position = getIntent().getIntExtra("position", 0);
         EditText etEditedTuDu = (EditText) findViewById(R.id.editText);
-        etEditedTuDu.setText(tuDuText);
-        etEditedTuDu.setSelection(tuDuText.length());
+        etEditedTuDu.setText(originalDescription);
+        etEditedTuDu.setSelection(originalDescription.length());
 
         final Button btnSave = (Button) findViewById(R.id.btnSave);
         etEditedTuDu.setOnEditorActionListener(new EditText.OnEditorActionListener() {
@@ -45,10 +46,11 @@ public class EditActivity extends AppCompatActivity {
 
     public void onSaveClicked(View v) {
         EditText etEditedTuDu = (EditText) findViewById(R.id.editText);
-        String tuDuText = etEditedTuDu.getText().toString();
+        String editedDescription = etEditedTuDu.getText().toString();
 
         Intent i = new Intent();
-        i.putExtra("editedText", tuDuText);
+        i.putExtra("originalDescription", originalDescription);
+        i.putExtra("editedDescription", editedDescription);
         i.putExtra("position", position);
         setResult(RESULT_OK, i);
         this.finish();

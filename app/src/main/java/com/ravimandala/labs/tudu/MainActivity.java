@@ -1,6 +1,7 @@
 package com.ravimandala.labs.tudu;
 
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -12,14 +13,17 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 
 import com.activeandroid.ActiveAndroid;
 import com.activeandroid.query.Select;
+import com.activeandroid.util.SQLiteUtils;
 import com.google.android.gms.appindexing.Action;
 import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.ravimandala.labs.tudu.db.TuDuCursorAdapter;
 import com.ravimandala.labs.tudu.db.model.TuDuItem;
 
 import java.util.ArrayList;
@@ -27,11 +31,11 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
-    ArrayList<String> tuDuList;
-    ArrayAdapter<String> tuDusAdapter;
+    TuDuCursorAdapter tuDusAdapter;
     ListView lvTuDus;
     private final int EDIT_REQUEST_CODE = 20;
     private final String TAG = "Ravi";
+    private final String defaultPriority = "HIGH";
 
     /**
      * ATTENTION: This was auto-generated to implement the App Indexing API.
@@ -43,11 +47,10 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == EDIT_REQUEST_CODE && resultCode == RESULT_OK) {
             int position = data.getIntExtra("position", -1);
-            if (position >= 0 && position < tuDuList.size()) {
-                String editedText = data.getStringExtra("editedText");
-                editTuDu(tuDuList.get(position), editedText);
-                tuDuList.set(position, editedText);
-                tuDusAdapter.notifyDataSetChanged();
+            if (position >= 0 && position < lvTuDus.getCount()) {
+                String originalDescription = data.getStringExtra("originalDescription");
+                String editedDescription = data.getStringExtra("editedDescription");
+                editTuDu(originalDescription, editedDescription);
             }
         }
     }
@@ -58,16 +61,16 @@ public class MainActivity extends AppCompatActivity {
         ActiveAndroid.initialize(getApplication());
         setContentView(R.layout.activity_main);
         lvTuDus = (ListView) findViewById(R.id.lvTuDus);
-        tuDuList = new ArrayList<>();
-        readTuDus();
-        tuDusAdapter = new ArrayAdapter<String>(this,
-                android.R.layout.simple_list_item_1, tuDuList);
+        Cursor tuDuCursor = TuDuItem.fetchResultCursor();
+        tuDusAdapter = new TuDuCursorAdapter(getApplicationContext(), tuDuCursor);
         lvTuDus.setAdapter(tuDusAdapter);
+
+        setListViewListener();
+
         EditText etNewTuDu = (EditText) findViewById(R.id.etNewTuDu);
         etNewTuDu.requestFocus();
 
         final Button btnAddTudu = (Button) findViewById(R.id.btnAddTuDu);
-        setListViewListener();
         etNewTuDu.setOnEditorActionListener(new EditText.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
@@ -89,7 +92,6 @@ public class MainActivity extends AppCompatActivity {
         String tuDuText = etNewTuDu.getText().toString();
 
         if(tuDuText.trim().length() != 0) {
-            tuDusAdapter.add(tuDuText);
             etNewTuDu.setText("");
             writeTuDu(tuDuText);
         }
@@ -100,8 +102,8 @@ public class MainActivity extends AppCompatActivity {
                 new AdapterView.OnItemLongClickListener() {
                     @Override
                     public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-                        deleteTuDu(tuDuList.get(position));
-                        tuDuList.remove(position);
+//                        deleteTuDu(tuDuList.get(position));
+//                        tuDuList.remove(position);
                         tuDusAdapter.notifyDataSetChanged();
                         return true;
                     }
@@ -113,7 +115,10 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                         Intent i = new Intent(MainActivity.this, EditActivity.class);
-                        i.putExtra("text2Edit", tuDuList.get(position));
+                        TextView tvDescription = (TextView) view.findViewById( R.id.tvDescription);
+                        TextView tvPriority = (TextView) view.findViewById( R.id.tvPriority);
+                        i.putExtra("originalDescription", tvDescription.getText());
+                        i.putExtra("priority", defaultPriority);
                         i.putExtra("position", position);
                         startActivityForResult(i, EDIT_REQUEST_CODE);
                     }
@@ -121,33 +126,35 @@ public class MainActivity extends AppCompatActivity {
         );
     }
 
-    private void readTuDus() {
-        List<TuDuItem> tuDuItems = new Select().from(TuDuItem.class).execute();
-        Log.d(TAG, "Number of TuDus retrieved from DB: " + tuDuItems.size());
-        for (TuDuItem tuDuRow: tuDuItems) {
-            tuDuList.add(tuDuRow.getDescription());
-        }
-    }
-
     private void writeTuDu(String tuDu) {
-        TuDuItem tuDuItem = new TuDuItem(tuDu);
+        TuDuItem tuDuItem = new TuDuItem(tuDu, defaultPriority);
         Log.d(TAG, "Saving TuDu to DB: " + tuDuItem.toString());
         tuDuItem.save();
-        List<TuDuItem> tuDuItems = new Select().from(TuDuItem.class).execute();
-        Log.d(TAG, "Number of items we have now: " + tuDuItems.size());
+
+        refreshCursor();
     }
 
     private void editTuDu(String oldTuDu, String newTuDu) {
-        TuDuItem tuDuItem = new TuDuItem(oldTuDu);
+        TuDuItem tuDuItem = new TuDuItem(oldTuDu, defaultPriority);
         tuDuItem.setDescription(newTuDu);
         Log.d(TAG, "Saving edited TuDu to DB: " + tuDuItem.toString());
         tuDuItem.save();
+
+        refreshCursor();
     }
 
     private void deleteTuDu(String tuDu) {
-        TuDuItem tuDuItem = new TuDuItem(tuDu);
+        TuDuItem tuDuItem = new TuDuItem(tuDu, defaultPriority);
         Log.d(TAG, "Deleting TuDu from DB: " + tuDuItem.toString());
         tuDuItem.delete();
+
+        refreshCursor();
+    }
+
+    private void refreshCursor() {
+        Cursor tuDuCursor = TuDuItem.fetchResultCursor();
+        tuDusAdapter.changeCursor(tuDuCursor);
+        tuDusAdapter.notifyDataSetChanged();
     }
 
     @Override
